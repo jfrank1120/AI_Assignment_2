@@ -1083,59 +1083,6 @@ def WalkSAT(clauses, p=0.5, max_flips=10000):
     # If no solution is found within the flip limit, we return failure
     return None
 
-
-# ______________________________________________________________________________
-# Map Coloring Problems
-
-
-def MapColoringSAT(colors, neighbors):
-    """Make a SAT for the problem of coloring a map with different colors
-    for any two adjacent regions. Arguments are a list of colors, and a
-    dict of {region: [neighbor,...]} entries. This dict may also be
-    specified as a string of the form defined by parse_neighbors."""
-    if isinstance(neighbors, str):
-        neighbors = parse_neighbors(neighbors)
-    colors = UniversalDict(colors)
-    clauses = []
-    for state in neighbors.keys():
-        clause = [expr(state + '_' + c) for c in colors[state]]
-        clauses.append(clause)
-        for t in itertools.combinations(clause, 2):
-            clauses.append([~t[0], ~t[1]])
-        visited = set()
-        adj = set(neighbors[state]) - visited
-        visited.add(state)
-        for n_state in adj:
-            for col in colors[n_state]:
-                clauses.append([expr('~' + state + '_' + col), expr('~' + n_state + '_' + col)])
-    return associate('&', map(lambda c: associate('|', c), clauses))
-
-
-australia_sat = MapColoringSAT(list('RGB'), """SA: WA NT Q NSW V; NT: WA Q; NSW: Q V; T: """)
-
-france_sat = MapColoringSAT(list('RGBY'),
-                            """AL: LO FC; AQ: MP LI PC; AU: LI CE BO RA LR MP; BO: CE IF CA FC RA
-                            AU; BR: NB PL; CA: IF PI LO FC BO; CE: PL NB NH IF BO AU LI PC; FC: BO
-                            CA LO AL RA; IF: NH PI CA BO CE; LI: PC CE AU MP AQ; LO: CA AL FC; LR:
-                            MP AU RA PA; MP: AQ LI AU LR; NB: NH CE PL BR; NH: PI IF CE NB; NO:
-                            PI; PA: LR RA; PC: PL CE LI AQ; PI: NH NO CA IF; PL: BR NB CE PC; RA:
-                            AU BO FC PA LR""")
-
-usa_sat = MapColoringSAT(list('RGBY'),
-                         """WA: OR ID; OR: ID NV CA; CA: NV AZ; NV: ID UT AZ; ID: MT WY UT;
-                         UT: WY CO AZ; MT: ND SD WY; WY: SD NE CO; CO: NE KA OK NM; NM: OK TX AZ;
-                         ND: MN SD; SD: MN IA NE; NE: IA MO KA; KA: MO OK; OK: MO AR TX;
-                         TX: AR LA; MN: WI IA; IA: WI IL MO; MO: IL KY TN AR; AR: MS TN LA;
-                         LA: MS; WI: MI IL; IL: IN KY; IN: OH KY; MS: TN AL; AL: TN GA FL;
-                         MI: OH IN; OH: PA WV KY; KY: WV VA TN; TN: VA NC GA; GA: NC SC FL;
-                         PA: NY NJ DE MD WV; WV: MD VA; VA: MD DC NC; NC: SC; NY: VT MA CT NJ;
-                         NJ: DE; DE: MD; MD: DC; VT: NH MA; MA: NH RI CT; CT: RI; ME: NH;
-                         HI: ; AK: """)
-
-
-# ______________________________________________________________________________
-
-
 # Expr functions for WumpusKB and HybridWumpusAgent
 
 def facing_east(time):
@@ -1466,9 +1413,9 @@ class WumpusPosition:
 
 # ______________________________________________________________________________
 
-
+"""
 class HybridWumpusAgent(Agent):
-    """An agent for the wumpus world that does logical inference. [Figure 7.20]"""
+    An agent for the wumpus world that does logical inference. [Figure 7.20]
 
     def __init__(self, dimentions):
         self.dimrow = dimentions
@@ -1592,7 +1539,7 @@ class HybridWumpusAgent(Agent):
         actions.extend(self.plan_route(current, shooting_positions, allowed))
         actions.append('Shoot')
         return actions
-
+    """
 
 # ______________________________________________________________________________
 

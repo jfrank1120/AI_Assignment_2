@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Assignment 2 - Jared Frank
+from logic import pl_resolution, KB, PropKB, expr
 
 """ A2 Part A
 
@@ -25,38 +26,48 @@ M6 = 'Incorrect. The following is the correct answer to the problem.'
 M7 = 'Correct.'
 M8 = 'Incorrect.'
 
-from logic import to_cnf, pl_resolution, KB
 
 def giveFeedback(student_state):
     statement_list = [
-        "CorrectAnswer => (Message1 v Message2 v Message3 v Message7)",
-        "~CorrectAnswer => (Message4 v Message5 v Message6 v Message8)",
-        "(MasteredSkill & IncorrectAnswer) v (MasteredSkill & CorrectStreak) => IsBored",
-        "NewSkill v IncorrectStreak => Message6",
-        "(IncorrectStreak & CorrectAnswer) v (NewSkill & CorrectStreak) => NeedsEncouragement",
-        "NeedsEncouragement => Message2 v Message4",
-        "IsBored => Message3 v Message5",
-        "(NewSkill & CorrectAnswer) v CorrectStreak => Message1"
+        "CorrectAnswer ==> (Message1 | Message2 | Message3 | Message7)",
+        "~CorrectAnswer ==> (Message4 | Message5 | Message6 | Message8)",
+        "(MasteredSkill & IncorrectAnswer) | (MasteredSkill & CorrectStreak) ==> IsBored",
+        "NewSkill | IncorrectStreak ==> Message6",
+        "(IncorrectStreak & CorrectAnswer) | (NewSkill & CorrectStreak) ==> NeedsEncouragement",
+        "NeedsEncouragement ==> Message2 | Message4",
+        "IsBored ==> Message3 | Message5",
+        "(NewSkill & CorrectAnswer) | CorrectStreak ==> Message1"
     ]
-    knowledge_base = KB()
+    priority_array = ["Message1", "Message2", "Message3", "Message4", "Message5", "Message6", "Message7", "Message8"]
+    msg_dict = {"Message1": M1, "Message2": M2, "Message3": M3, "Message4": M4, "Message5": M5, "Message6": M6,
+                "Message7": M7, "Message8": M8}
+    feedback_msg = "Nothing Entailed"
+    knowledge_base = PropKB()
     for s in statement_list:
         knowledge_base.tell(s)
 
     list_of_propositions = student_state.split('&')
-    for l in list_of_propositions:
-        l = l.strip()
+    for prop in list_of_propositions:
+        prop = prop.strip()
+        knowledge_base.tell(prop)
+
+    print("CLAUSES:")
+    for c in knowledge_base.clauses:
+        print(c)
 
     # Iterate through all propositions
-    for n in list_of_propositions:
-        for st in statement_list:
-            pl_resolution(knowledge_base, st)
+    for p in priority_array:
+        p_expr = expr(p)
 
-    feedback_message: str = M1
-    return feedback_message
+        resolution_bool = pl_resolution(knowledge_base, p_expr)
+        print(resolution_bool)
+        if resolution_bool:
+            feedback_msg = msg_dict.get(p)
+    return feedback_msg
 
 
 """ A2 Part B
-
+ 
     solveEquation is a function that converts a string representation of an equation to a first-order logic representation, and then
     uses a forward planning algorithm to solve the equation. 
     
@@ -126,3 +137,8 @@ def stepThroughProblem(equation, action, current_skills):
     feedback_message = M1
     updated_skills = UPDATED_SKILLS
     return [feedback_message, updated_skills]
+
+
+if __name__ == '__main__':
+    print(giveFeedback("CorrectAnswer"))
+
