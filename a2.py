@@ -60,9 +60,13 @@ def giveFeedback(student_state):
         p_expr = expr(p)
 
         resolution_bool = pl_resolution(knowledge_base, p_expr)
-        print(resolution_bool)
         if resolution_bool:
-            feedback_msg = msg_dict.get(p)
+            print(str(resolution_bool) + " : " + p)
+            feedback_msg = "Message: " + msg_dict.get(p)
+        else:
+            neg_p_expr = expr('~'+p)
+            knowledge_base.tell(neg_p_expr)
+            print("Added: " + str(neg_p_expr))
     return feedback_msg
 
 
@@ -140,5 +144,8 @@ def stepThroughProblem(equation, action, current_skills):
 
 
 if __name__ == '__main__':
-    print(giveFeedback("CorrectAnswer"))
+    # Testing Part A
+    print(giveFeedback("~CorrectAnswer"))
+    # Testing Part B
+    print(solveEquation(EQUATION))
 
