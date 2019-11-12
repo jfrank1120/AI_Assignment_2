@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 # Assignment 2 - Jared Frank
+# Imports for A
 from logic import pl_resolution, KB, PropKB, expr
+# Imports for B
+from planning import Action, PlanningProblem, ForwardPlan
+# Imports for C
+
 
 """ A2 Part A
 
@@ -82,10 +87,9 @@ SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
 
 def solveEquation(equation):
+    # Parsing Predicates out of the Equation
     left_predicates = []
     right_predicates = []
-    left_eq = ''
-    right_eq = ''
     (left_eq, right_eq) = equation.split('=')
     operator_pos = 0
     while operator_pos != -1:
@@ -110,6 +114,8 @@ def solveEquation(equation):
             right_eq = right_eq[0:operator_pos]
     print(left_predicates)
     print(right_predicates)
+
+    # Begin Planning Problem
 
 
     plan = SAMPLE_ACTION_PLAN
