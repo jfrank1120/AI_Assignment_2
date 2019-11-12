@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="d2d8083a-b759-488d-b8e8-85086dcda76f" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CS1571 Introduction to AI - Assignment 2.docx" beforeDir="false" afterPath="$PROJECT_DIR$/CS1571 Introduction to AI - Assignment 2.docx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/a2.py" beforeDir="false" afterPath="$PROJECT_DIR$/a2.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -26,6 +27,7 @@
   <component name="ProjectId" id="1SqDQv7DH9Ly5O8Sryb7cebcO7Z" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../Assignment 1/Frank-cs1571-a1.py" />
     <property name="settings.editor.selected.configurable" value="vcs.Git" />
@@ -84,7 +86,8 @@
       <workItem from="1572883450756" duration="1887000" />
       <workItem from="1573055762852" duration="3226000" />
       <workItem from="1573160638592" duration="1240000" />
-      <workItem from="1573339413860" duration="605000" />
+      <workItem from="1573339413860" duration="1013000" />
+      <workItem from="1573504120983" duration="7973000" />
     </task>
     <servers />
   </component>
@@ -105,6 +108,6 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Assignment_2$A2_Config.coverage" NAME="A2_Config Coverage Results" MODIFIED="1573070143460" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Assignment_2$A2_Config.coverage" NAME="A2_Config Coverage Results" MODIFIED="1573521801145" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

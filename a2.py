@@ -31,7 +31,7 @@ def giveFeedback(student_state):
     statement_list = [
         "CorrectAnswer ==> (Message1 | Message2 | Message3 | Message7)",
         "~CorrectAnswer ==> (Message4 | Message5 | Message6 | Message8)",
-        "(MasteredSkill & IncorrectAnswer) | (MasteredSkill & CorrectStreak) ==> IsBored",
+        "(MasteredSkill & ~CorrectAnswer) & (MasteredSkill & CorrectStreak) ==> IsBored",
         "NewSkill | IncorrectStreak ==> Message6",
         "(IncorrectStreak & CorrectAnswer) | (NewSkill & CorrectStreak) ==> NeedsEncouragement",
         "NeedsEncouragement ==> Message2 | Message4",
@@ -51,10 +51,6 @@ def giveFeedback(student_state):
         prop = prop.strip()
         knowledge_base.tell(prop)
 
-    print("CLAUSES:")
-    for c in knowledge_base.clauses:
-        print(c)
-
     # Iterate through all propositions
     for p in priority_array:
         p_expr = expr(p)
@@ -66,7 +62,6 @@ def giveFeedback(student_state):
         else:
             neg_p_expr = expr('~'+p)
             knowledge_base.tell(neg_p_expr)
-            print("Added: " + str(neg_p_expr))
     return feedback_msg
 
 
@@ -82,11 +77,41 @@ def giveFeedback(student_state):
             Task Domain part of the assignment description.
     
 """
-SAMPLE_EQUATION = '3x-2=6'
+SAMPLE_EQUATION = '3x-2=6-3x+3'
 SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
 
 def solveEquation(equation):
+    left_predicates = []
+    right_predicates = []
+    left_eq = ''
+    right_eq = ''
+    (left_eq, right_eq) = equation.split('=')
+    operator_pos = 0
+    while operator_pos != -1:
+        operator_pos = str(left_eq).rfind('+')
+        if operator_pos == -1:
+            operator_pos = str(left_eq).rfind('-')
+        if operator_pos == -1:
+            left_predicates.append(str(left_eq[0:len(left_eq)]))
+        else:
+            left_predicates.append(str(left_eq)[operator_pos:len(left_eq)])
+            left_eq = left_eq[0:operator_pos]
+
+    operator_pos = 0
+    while operator_pos != -1:
+        operator_pos = str(right_eq).rfind('+')
+        if operator_pos == -1:
+            operator_pos = str(right_eq).rfind('-')
+        if operator_pos == -1:
+            right_predicates.append(str(right_eq[0:len(right_eq)]))
+        else:
+            right_predicates.append(str(right_eq)[operator_pos:len(right_eq)])
+            right_eq = right_eq[0:operator_pos]
+    print(left_predicates)
+    print(right_predicates)
+
+
     plan = SAMPLE_ACTION_PLAN
     return plan
 
@@ -106,7 +131,7 @@ def solveEquation(equation):
     
 """
 CURRENT_SKILLS = ['S8', 'S9']
-EQUATION = '3x+2=8'
+EQUATION = '3x-2=6'
 SAMPLE_MISSING_SKILLS = ['S4', 'S5']
 
 
@@ -132,7 +157,7 @@ def predictSuccess(current_skills, equation):
     
 """
 CURRENT_SKILLS = ['S8', 'S9']
-EQUATION = '3x+2=8'
+EQUATION = '3x-2=6'
 ACTION = 'add -2'
 UPDATED_SKILLS = ['S8', 'S9', 'S4']
 
@@ -145,7 +170,7 @@ def stepThroughProblem(equation, action, current_skills):
 
 if __name__ == '__main__':
     # Testing Part A
-    print(giveFeedback("~CorrectAnswer"))
+    #print(giveFeedback("CorrectAnswer & IncorrectStreak"))
     # Testing Part B
-    print(solveEquation(EQUATION))
+    print(solveEquation(SAMPLE_EQUATION))
 
