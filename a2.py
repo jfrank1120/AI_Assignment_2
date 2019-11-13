@@ -5,7 +5,6 @@ from logic import pl_resolution, KB, PropKB, expr
 # Imports for B
 from planning import Action, PlanningProblem, ForwardPlan
 from search import astar_search
-
 # Imports for C
 
 
@@ -83,11 +82,9 @@ def giveFeedback(student_state):
             Task Domain part of the assignment description.
     
 """
-SAMPLE_EQUATION = '-x-2=-x-7x'
-SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
-
-def solveEquation(equation):
+# Parses the input Equation to get the inital string for the PlanningProblem
+def getInitialString(equation):
     left_terms = []
     right_terms = []
     (left_eq, right_eq) = equation.split('=')
@@ -131,10 +128,10 @@ def solveEquation(equation):
             elif term == '+':
                 term = '1'
             term = term.replace('x', '')
-            initial_str += " varLeft(" + str(term) + ") &"
+            initial_str += " VarLeft(" + str(term) + ") &"
         else:
             # Term is a constant
-            initial_str += " constLeft(" + str(term) + ") &"
+            initial_str += " ConstLeft(" + str(term) + ") &"
     for t in right_terms:
         if t.find('+') != -1:
             t = t.replace('+', '')
@@ -147,39 +144,45 @@ def solveEquation(equation):
             elif t == '+x':
                 t = '-1'
             t = t.replace('x', '')
-            initial_str += " varRight(" + str(t) + ") &"
+            initial_str += " VarRight(" + str(t) + ") &"
         else:
             # Term is a constant
-            initial_str += " constRight(" + str(t) + ") &"
+            initial_str += " ConstRight(" + str(t) + ") &"
     initial_str = initial_str[1:-2]
-    print(initial_str)
+    print("Initial: " + initial_str + " =-=-=-=-=-=-=-=-=-=")
+    return initial_str
 
+SAMPLE_EQUATION = 'x=1+2'
+SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
+def solveEquation(equation):
+    # Get the string representing the initial state
+    initial_str = getInitialString(equation)
+
+    # Create the planning problem
     planning_prob = PlanningProblem(initial=initial_str,
-                                    goals='varLeft(x) & constRight(y)',
-                                    actions=[Action('combineLeftConsts(x,y)',
-                                                    precond='constLeft(a) & constLeft(b)',
-                                                    effect='constLeft(a+b)'),
-                                             Action('combineRightConsts(x,y)',
-                                                    precond='constRight(a) & constRight(b)',
-                                                    effect='constRight(a+b)',),
-                                             Action('combineLeftVars(x,y)',
-                                                    precond='varLeft(a) & varLeft(b)',
-                                                    effect='varLeft(a+b)',),
-                                             Action('combineRightVars(x,y)',
-                                                    precond='varRight(a) & varRight(b)',
-                                                    effect='varRight(a+b)',),
-                                             Action('addVar(x)',
-                                                    precond='varRight(a)',
-                                                    effect='varLeft(a)',),
-                                             Action('addConst(x)',
-                                                    precond='constLeft(a)',
-                                                    effect='constRight(a)',),
-                                             Action('divide(x)',
-                                                    precond='varLeft(a) & constRight(b)',
-                                                    effect='constRight(a/b) & varLeft(1)',
-                                            )])
+                                    goals='VarLeft(1) & ConstRight(b) | ConstLeft(a) & VarRight(1)',
+                                    actions=[Action('combineLeftConsts(a,b)',
+                                                    precond='ConstLeft(a) & ConstLeft(b)',
+                                                    effect='ConstLeft(c) & ~ConstLeft(a) & ~ConstLeft(b)'),
+                                             Action('combineRightConsts(a,b)',
+                                                    precond='ConstRight(a) & ConstRight(b)',
+                                                    effect='ConstRight(c) & ~ConstRight(b) & ~ConstRight(a)'),
+                                             Action('combineLeftVars(a,b)',
+                                                    precond='VarLeft(a) & VarLeft(b)',
+                                                    effect='VarLeft(c) & ~VarLeft(b) & ~VarLeft(a)'),
+                                             Action('combineRightVars(a,b)',
+                                                    precond='VarRight(a) & VarRight(b)',
+                                                    effect='VarRight(c) & ~VarRight(a) & ~VarRight(b)',),
+                                             Action('addVarRight(a)',
+                                                    precond='VarRight(a)',
+                                                    effect='VarLeft(a) & ~VarRight(a)',),
+                                             Action('addConst(a)',
+                                                    precond='ConstLeft(a)',
+                                                    effect='ConstRight(a) & ~ConstLeft(a)',),
+                                             Action('divide(a,b)',
+                                                    precond='VarLeft(a) & ConstRight(b)',
+                                                    effect='VarLeft(1) & ConstRight(a) & ~ConstRight(b) & ~VarLeft(a)',)])
     fwd_plan = ForwardPlan(planning_prob)
-    print(astar_search(fwd_plan))
     return astar_search(fwd_plan).solution()
 
 
@@ -240,4 +243,3 @@ if __name__ == '__main__':
     print(SAMPLE_EQUATION)
     print(solveEquation(SAMPLE_EQUATION))
     # Testing for Part C
-    
