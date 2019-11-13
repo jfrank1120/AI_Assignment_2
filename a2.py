@@ -4,6 +4,8 @@
 from logic import pl_resolution, KB, PropKB, expr
 # Imports for B
 from planning import Action, PlanningProblem, ForwardPlan
+from search import astar_search
+
 # Imports for C
 
 
@@ -51,10 +53,7 @@ def giveFeedback(student_state):
     for s in statement_list:
         knowledge_base.tell(s)
 
-    list_of_propositions = student_state.split('&')
-    for prop in list_of_propositions:
-        prop = prop.strip()
-        knowledge_base.tell(prop)
+    knowledge_base.tell(expr(student_state))
 
     # Iterate through all propositions
     for p in priority_array:
@@ -63,10 +62,12 @@ def giveFeedback(student_state):
         resolution_bool = pl_resolution(knowledge_base, p_expr)
         if resolution_bool:
             print(str(resolution_bool) + " : " + p)
-            feedback_msg = "Message: " + msg_dict.get(p)
+            return "Message: " + msg_dict.get(p)
+
         else:
-            neg_p_expr = expr('~'+p)
+            neg_p_expr = expr('~' + p)
             knowledge_base.tell(neg_p_expr)
+            print('Adding: ~' + p)
     return feedback_msg
 
 
@@ -82,44 +83,104 @@ def giveFeedback(student_state):
             Task Domain part of the assignment description.
     
 """
-SAMPLE_EQUATION = '3x-2=6-3x+3'
+SAMPLE_EQUATION = '-x-2=-x-7x'
 SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
 
 def solveEquation(equation):
-    # Parsing Predicates out of the Equation
-    left_predicates = []
-    right_predicates = []
+    left_terms = []
+    right_terms = []
     (left_eq, right_eq) = equation.split('=')
     operator_pos = 0
     while operator_pos != -1:
-        operator_pos = str(left_eq).rfind('+')
+        plus_operator_pos = str(left_eq).rfind('+')
+        minus_operator_pos = str(left_eq).rfind('-')
+        operator_pos = max(plus_operator_pos, minus_operator_pos)
         if operator_pos == -1:
-            operator_pos = str(left_eq).rfind('-')
-        if operator_pos == -1:
-            left_predicates.append(str(left_eq[0:len(left_eq)]))
+            left_terms.append(str(left_eq[0:len(left_eq)]))
         else:
-            left_predicates.append(str(left_eq)[operator_pos:len(left_eq)])
+            left_terms.append(str(left_eq)[operator_pos:len(left_eq)])
             left_eq = left_eq[0:operator_pos]
 
     operator_pos = 0
     while operator_pos != -1:
-        operator_pos = str(right_eq).rfind('+')
+        plus_operator_pos = str(right_eq).rfind('+')
+        minus_operator_pos = str(right_eq).rfind('-')
+        operator_pos = max(plus_operator_pos, minus_operator_pos)
         if operator_pos == -1:
-            operator_pos = str(right_eq).rfind('-')
-        if operator_pos == -1:
-            right_predicates.append(str(right_eq[0:len(right_eq)]))
+            right_terms.append(str(right_eq[0:len(right_eq)]))
         else:
-            right_predicates.append(str(right_eq)[operator_pos:len(right_eq)])
+            right_terms.append(str(right_eq)[operator_pos:len(right_eq)])
             right_eq = right_eq[0:operator_pos]
-    print(left_predicates)
-    print(right_predicates)
+
+    left_terms = list(filter(None, left_terms))
+    right_terms = list(filter(None, right_terms))
 
     # Begin Planning Problem
+    # Create initial string for Planning Problem
+    initial_str = ''
+    for term in left_terms:
+        if term.find('+') != -1:
+            term = term.replace('+', '')
+        if term.find('x') != -1:
+            # If the term is a variable
+            if term == 'x':
+                term = '1'
+            elif term == '-x':
+                term = '-1'
+            elif term == '+':
+                term = '1'
+            term = term.replace('x', '')
+            initial_str += " varLeft(" + str(term) + ") &"
+        else:
+            # Term is a constant
+            initial_str += " constLeft(" + str(term) + ") &"
+    for t in right_terms:
+        if t.find('+') != -1:
+            t = t.replace('+', '')
+        if t.find('x') != -1:
+            # If the term is a variable
+            if t == 'x':
+                t = '1'
+            elif t == '-x':
+                t = '-1'
+            elif t == '+x':
+                t = '-1'
+            t = t.replace('x', '')
+            initial_str += " varRight(" + str(t) + ") &"
+        else:
+            # Term is a constant
+            initial_str += " constRight(" + str(t) + ") &"
+    initial_str = initial_str[1:-2]
+    print(initial_str)
 
-
-    plan = SAMPLE_ACTION_PLAN
-    return plan
+    planning_prob = PlanningProblem(initial=initial_str,
+                                    goals='varLeft(x) & constRight(y)',
+                                    actions=[Action('combineLeftConsts(x,y)',
+                                                    precond='constLeft(a) & constLeft(b)',
+                                                    effect='constLeft(a+b)'),
+                                             Action('combineRightConsts(x,y)',
+                                                    precond='constRight(a) & constRight(b)',
+                                                    effect='constRight(a+b)',),
+                                             Action('combineLeftVars(x,y)',
+                                                    precond='varLeft(a) & varLeft(b)',
+                                                    effect='varLeft(a+b)',),
+                                             Action('combineRightVars(x,y)',
+                                                    precond='varRight(a) & varRight(b)',
+                                                    effect='varRight(a+b)',),
+                                             Action('addVar(x)',
+                                                    precond='varRight(a)',
+                                                    effect='varLeft(a)',),
+                                             Action('addConst(x)',
+                                                    precond='constLeft(a)',
+                                                    effect='constRight(a)',),
+                                             Action('divide(x)',
+                                                    precond='varLeft(a) & constRight(b)',
+                                                    effect='constRight(a/b) & varLeft(1)',
+                                            )])
+    fwd_plan = ForwardPlan(planning_prob)
+    print(astar_search(fwd_plan))
+    return astar_search(fwd_plan).solution()
 
 
 """ A2 Part C
@@ -162,8 +223,6 @@ def predictSuccess(current_skills, equation):
     updated_skills: A list of skills students have after executing the action.
     
 """
-CURRENT_SKILLS = ['S8', 'S9']
-EQUATION = '3x-2=6'
 ACTION = 'add -2'
 UPDATED_SKILLS = ['S8', 'S9', 'S4']
 
@@ -178,5 +237,7 @@ if __name__ == '__main__':
     # Testing Part A
     #print(giveFeedback("CorrectAnswer & IncorrectStreak"))
     # Testing Part B
+    print(SAMPLE_EQUATION)
     print(solveEquation(SAMPLE_EQUATION))
-
+    # Testing for Part C
+    
