@@ -169,9 +169,14 @@ def solveEquation(equation):
     # There is only a single var
     if count_var == 1:
         terms_list.append(" SingleVar()")
+    elif count_var == 2:
+        terms_list.append(" TwoVars()")
+
     # There is only a single const
     if count_const == 1:
         terms_list.append(" SingleConst()")
+    elif count_const == 2:
+        terms_list.append(" TwoConsts()")
 
     # Create initial string again
     initial_str = ' &'
@@ -189,15 +194,15 @@ def solveEquation(equation):
                                                     precond='ConstLeft(b)',
                                                     effect='ConstRight(b) & ~ConstLeft(b)',),
                                              # Combine two consts on the right and replace all with SingleConst()
-                                             Action('combineRightConstTwoTerms(a, b, c)',
-                                                    precond='ConstRight(a) & ConstRight(b) & ~ConstRight(c)',
+                                             Action('combineRightConstTwoTerms(a, b)',
+                                                    precond='ConstRight(a) & ConstRight(b) & TwoConsts()',
                                                     effect='~ConstRight(a) & ~ConstRight(b) & SingleConst()'),
                                              # Combine three consts on the right and replace all with SingleConst()
                                              Action('combineRightConstThreeTerms(a, b, c)',
                                                     precond='ConstRight(a) & ConstRight(b) & ConstRight(c)',
                                                     effect='~ConstRight(a) & ~ConstRight(b) & ~ConstRight(c) & SingleConst()'),
-                                             Action('combineLeftVarTwoTerms(a, b, c)',
-                                                    precond='VarLeft(a) & VarLeft(b) & ~VarLeft(c)',
+                                             Action('combineLeftVarTwoTerms(a, b)',
+                                                    precond='VarLeft(a) & VarLeft(b) & TwoVars()',
                                                     effect='~VarLeft(a) & ~VarLeft(b) & SingleVar()'),
                                              Action('combineLeftVarThreeTerms(a, b, c)',
                                                     precond='VarLeft(a) & VarLeft(b) & VarLeft(c)',
