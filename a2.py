@@ -85,9 +85,10 @@ def giveFeedback(student_state):
 """
 
 # Parses the input Equation to get the initial string for the PlanningProblem
-def getInitialString(equation):
+
+# Get the left-hand terms
+def getLeftTerms(equation):
     left_terms = []
-    right_terms = []
     (left_eq, right_eq) = equation.split('=')
     operator_pos = 0
     while operator_pos != -1:
@@ -99,7 +100,12 @@ def getInitialString(equation):
         else:
             left_terms.append(str(left_eq)[operator_pos:len(left_eq)])
             left_eq = left_eq[0:operator_pos]
+    return left_terms
 
+# Get the right-hand terms
+def getRightTerms(equation):
+    right_terms = []
+    (left_eq, right_eq) = equation.split('=')
     operator_pos = 0
     while operator_pos != -1:
         plus_operator_pos = str(right_eq).rfind('+')
@@ -111,8 +117,12 @@ def getInitialString(equation):
             right_terms.append(str(right_eq)[operator_pos:len(right_eq)])
             right_eq = right_eq[0:operator_pos]
 
-    left_terms = list(filter(None, left_terms))
-    right_terms = list(filter(None, right_terms))
+    return right_terms
+
+# Combine both sides of terms into initial state string
+def getInitialString(left_terms, right_terms):
+    #left_terms = list(filter(None, left_terms))
+    #right_terms = list(filter(None, right_terms))
 
     # Begin Planning Problem
     # Create initial string for Planning Problem
@@ -152,12 +162,67 @@ def getInitialString(equation):
     initial_str = initial_str[1:-2]
     return initial_str
 
+# Calculates the divisor for the end of the problem based on the terms in the equation
+def calcDivisor(lht, rht):
+    divisor_val = 0
+    for lt in lht:
+        print(lt)
+        if 'x' in lt:
+            lt = lt.replace('x', '')
+            if '+' in lt:
+                lt = lt.replace('+', '')
+            divisor_val += int(lt)
+    for r in rht:
+        if 'x' in r:
+            r = r.replace('x', '')
+            if '+' in r:
+                r = r.replace('+', '')
+                r = '-' + r
+            elif '-' in r:
+                r = r.replace('-', '')
+            divisor_val += int(r)
+    return divisor_val
 
-SAMPLE_EQUATION = 'x=2'
+# Parse the output solution into the correct form
+def parseSolution(solution_arr, left_terms, right_terms):
+    print(solution_arr)
+    parsed_solution = []
+    for actions in solution_arr:
+        actions = str(actions)
+        # If the action is to Add a var
+        if actions.find("addVar") != -1:
+            val = actions[7]
+            if actions[6] == '-':
+                val = '-' + val
+            val += 'x'
+            parsed_solution.append('add ' + str(val))
+        # If the action is to Add a const
+        elif actions.find('addConst') != -1:
+            val = actions[9]
+            if actions[8] == '-':
+                val += '-'
+            parsed_solution.append('add ' + str(val))
+        # If the action is to combine the RHS
+        elif actions.find('combineRightConst') != -1:
+            parsed_solution.append('combine RHS constant terms')
+        # If the action is to combine the LHS
+        elif actions.find('combineLeftVar') != -1:
+            parsed_solution.append('combine LHS variable terms')
+    divisor = calcDivisor(left_terms, right_terms)
+    parsed_solution.append('divide ' + str(divisor))
+    return parsed_solution
+
+SAMPLE_EQUATION = '9x+2x=4+1'
 SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
+
+# Solve the equation and return the steps
 def solveEquation(equation):
     # Get the string representing the initial state
-    initial_str = getInitialString(equation)
+    left_terms = getLeftTerms(equation)
+    right_terms = getRightTerms(equation)
+    left_terms = list(filter(None, left_terms))
+    right_terms = list(filter(None, right_terms))
+    initial_str = getInitialString(left_terms, right_terms)
     terms_list = initial_str.split("&")
     count_const = 0
     count_var = 0
@@ -217,7 +282,7 @@ def solveEquation(equation):
                                              #        precond='ConstRight(a) & ConstRight(a) & ConstRight(a)',
                                              #        effect='~ConstRight(a) & ~ConstRight(a) & ~ConstRight(a) & ConstRight(b) & SingleConst()'),
                                              # Divide the SingleVar on left and SingleConst on right return Solved()
-                                             Action('divideNoDup(a,b)',
+                                             Action('divideNoDup()',
                                                     precond='SingleConst() & SingleVar()',
                                                     effect='Solved() & ~SingleConst() & ~SingleVar()',),
                                              # Divide SingleVar on left and SingleConst on right with equal coefficients and return Solved()
@@ -226,8 +291,8 @@ def solveEquation(equation):
                                                     effect='Solved() & ~SingleConst() & ~SingleVar()'),
                                              ])
     fwd_plan = ForwardPlan(planning_prob)
-    return astar_search(fwd_plan).solution()
-
+    solution_str = astar_search(fwd_plan).solution()
+    return parseSolution(solution_str, left_terms, right_terms)
 
 """ A2 Part C
 
