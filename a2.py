@@ -38,9 +38,10 @@ def giveFeedback(student_state):
         "CorrectAnswer ==> (Message1 | Message2 | Message3 | Message7)",
         "~CorrectAnswer ==> (Message4 | Message5 | Message6 | Message8)",
         "(MasteredSkill & ~CorrectAnswer) & (MasteredSkill & CorrectStreak) ==> IsBored",
-        "NewSkill | IncorrectStreak ==> Message6",
+        "(NewSkill | IncorrectStreak) & CorrectAnswer ==> Message6",
         "(IncorrectStreak & CorrectAnswer) | (NewSkill & CorrectStreak) ==> NeedsEncouragement",
-        "NeedsEncouragement ==> Message2 | Message4",
+        "NeedsEncouragement & CorrectAnswer ==> Message2",
+        "NeedsEncouragement & ~CorrectAnswer ==>  Message4",
         "IsBored ==> Message3 | Message5",
         "(NewSkill & CorrectAnswer) | CorrectStreak ==> Message1"
     ]
@@ -151,7 +152,7 @@ def getInitialString(equation):
     initial_str = initial_str[1:-2]
     return initial_str
 
-SAMPLE_EQUATION = 'x=1+2'
+SAMPLE_EQUATION = 'x+2x=2'
 SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 def solveEquation(equation):
     # Get the string representing the initial state
@@ -188,13 +189,19 @@ def solveEquation(equation):
                                                     precond='ConstLeft(b)',
                                                     effect='ConstRight(b) & ~ConstLeft(b)',),
                                              # Combine two consts on the right and replace all with SingleConst()
-                                             Action('combineRightConstTwoTerms(a, b)',
-                                                    precond='ConstRight(a) & ConstRight(b)',
+                                             Action('combineRightConstTwoTerms(a, b, c)',
+                                                    precond='ConstRight(a) & ConstRight(b) & ~ConstRight(c)',
                                                     effect='~ConstRight(a) & ~ConstRight(b) & SingleConst()'),
                                              # Combine three consts on the right and replace all with SingleConst()
                                              Action('combineRightConstThreeTerms(a, b, c)',
                                                     precond='ConstRight(a) & ConstRight(b) & ConstRight(c)',
                                                     effect='~ConstRight(a) & ~ConstRight(b) & ~ConstRight(c) & SingleConst()'),
+                                             Action('combineLeftVarTwoTerms(a, b, c)',
+                                                    precond='VarLeft(a) & VarLeft(b) & ~VarLeft(c)',
+                                                    effect='~VarLeft(a) & ~VarLeft(b) & SingleVar()'),
+                                             Action('combineLeftVarThreeTerms(a, b, c)',
+                                                    precond='VarLeft(a) & VarLeft(b) & VarLeft(c)',
+                                                    effect='~VarLeft(a) & ~VarLeft(b) & ~VarLeft(c) & SingleVar()'),
                                              # Combine two consts on right where both have duplicate coefficients
                                              # Action('combineRightDupsTwo(a)',
                                              #        precond='ConstRight(a) & ConstRight(a)',
