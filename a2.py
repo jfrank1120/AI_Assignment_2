@@ -149,7 +149,6 @@ def getInitialString(equation):
             # Term is a constant
             initial_str += " ConstRight(" + str(t) + ") &"
     initial_str = initial_str[1:-2]
-    print("Initial: " + initial_str + " =-=-=-=-=-=-=-=-=-=")
     return initial_str
 
 SAMPLE_EQUATION = 'x=1+2'
@@ -157,31 +156,62 @@ SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 def solveEquation(equation):
     # Get the string representing the initial state
     initial_str = getInitialString(equation)
+    terms_list = initial_str.split("&")
+    count_const = 0
+    count_var = 0
+    for x in terms_list:
+        if x.find('Const') != -1:
+            count_const += 1
+        if x.find('Var') != -1:
+            count_var += 1
 
+    # There is only a single var
+    if count_var == 1:
+        terms_list.append(" SingleVar()")
+    # There is only a single const
+    if count_const == 1:
+        terms_list.append(" SingleConst()")
+
+    # Create initial string again
+    initial_str = ' &'
+    initial_str = initial_str.join(terms_list)
+    print(initial_str)
+    print()
     # Create the planning problem
     planning_prob = PlanningProblem(initial=initial_str,
-                                    goals='VarLeft(1) & ConstRight(b) | ConstLeft(a) & VarRight(1)',
-                                    actions=[Action('combineLeftConsts(a,b)',
-                                                    precond='ConstLeft(a) & ConstLeft(b)',
-                                                    effect='ConstLeft(c) & ~ConstLeft(a) & ~ConstLeft(b)'),
-                                             Action('combineRightConsts(a,b)',
-                                                    precond='ConstRight(a) & ConstRight(b)',
-                                                    effect='ConstRight(c) & ~ConstRight(b) & ~ConstRight(a)'),
-                                             Action('combineLeftVars(a,b)',
-                                                    precond='VarLeft(a) & VarLeft(b)',
-                                                    effect='VarLeft(c) & ~VarLeft(b) & ~VarLeft(a)'),
-                                             Action('combineRightVars(a,b)',
-                                                    precond='VarRight(a) & VarRight(b)',
-                                                    effect='VarRight(c) & ~VarRight(a) & ~VarRight(b)',),
-                                             Action('addVarRight(a)',
+                                    goals='Solved()',
+                                    actions=[Action('addVar(a)',
                                                     precond='VarRight(a)',
                                                     effect='VarLeft(a) & ~VarRight(a)',),
-                                             Action('addConst(a)',
-                                                    precond='ConstLeft(a)',
-                                                    effect='ConstRight(a) & ~ConstLeft(a)',),
-                                             Action('divide(a,b)',
-                                                    precond='VarLeft(a) & ConstRight(b)',
-                                                    effect='VarLeft(1) & ConstRight(a) & ~ConstRight(b) & ~VarLeft(a)',)])
+                                             # Add a constant to right side from left
+                                             Action('addConst(b)',
+                                                    precond='ConstLeft(b)',
+                                                    effect='ConstRight(b) & ~ConstLeft(b)',),
+                                             # Combine two consts on the right and replace all with SingleConst()
+                                             Action('combineRightConstTwoTerms(a, b)',
+                                                    precond='ConstRight(a) & ConstRight(b)',
+                                                    effect='~ConstRight(a) & ~ConstRight(b) & SingleConst()'),
+                                             # Combine three consts on the right and replace all with SingleConst()
+                                             Action('combineRightConstThreeTerms(a, b, c)',
+                                                    precond='ConstRight(a) & ConstRight(b) & ConstRight(c)',
+                                                    effect='~ConstRight(a) & ~ConstRight(b) & ~ConstRight(c) & SingleConst()'),
+                                             # Combine two consts on right where both have duplicate coefficients
+                                             # Action('combineRightDupsTwo(a)',
+                                             #        precond='ConstRight(a) & ConstRight(a)',
+                                             #        effect='~ConstRight(a) & ~ConstRight(a) & ConstRight(b) & SingleConst()'),
+                                             # # Combine three consts on right where all have duplicate coefficients
+                                             # Action('combineRightDupsThree(a)',
+                                             #        precond='ConstRight(a) & ConstRight(a) & ConstRight(a)',
+                                             #        effect='~ConstRight(a) & ~ConstRight(a) & ~ConstRight(a) & ConstRight(b) & SingleConst()'),
+                                             # Divide the SingleVar on left and SingleConst on right return Solved()
+                                             Action('divideNoDup(a,b)',
+                                                    precond='SingleConst() & SingleVar()',
+                                                    effect='Solved() & ~SingleConst() & ~SingleVar()',),
+                                             # Divide SingleVar on left and SingleConst on right with equal coefficients and return Solved()
+                                             Action('divideDup(a)',
+                                                    precond='SingleConst() & SingleVar()',
+                                                    effect='Solved() & ~SingleConst() & ~SingleVar()'),
+                                             ])
     fwd_plan = ForwardPlan(planning_prob)
     return astar_search(fwd_plan).solution()
 
