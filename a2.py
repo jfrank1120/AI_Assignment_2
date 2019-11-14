@@ -84,7 +84,7 @@ def giveFeedback(student_state):
     
 """
 
-# Parses the input Equation to get the inital string for the PlanningProblem
+# Parses the input Equation to get the initial string for the PlanningProblem
 def getInitialString(equation):
     left_terms = []
     right_terms = []
@@ -152,7 +152,8 @@ def getInitialString(equation):
     initial_str = initial_str[1:-2]
     return initial_str
 
-SAMPLE_EQUATION = 'x+2x=2'
+
+SAMPLE_EQUATION = 'x=2'
 SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 def solveEquation(equation):
     # Get the string representing the initial state
