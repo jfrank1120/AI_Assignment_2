@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # Assignment 2 - Jared Frank
 # Imports for A
-from logic import pl_resolution, KB, PropKB, expr
+from logic import pl_resolution, KB, PropKB, expr, FolKB
 # Imports for B
 from planning import Action, PlanningProblem, ForwardPlan
 from search import astar_search
 # Imports for C
-
 
 """ A2 Part A
 
@@ -166,7 +165,6 @@ def getInitialString(left_terms, right_terms):
 def calcDivisor(lht, rht):
     divisor_val = 0
     for lt in lht:
-        print(lt)
         if 'x' in lt:
             lt = lt.replace('x', '')
             if '+' in lt:
@@ -185,7 +183,6 @@ def calcDivisor(lht, rht):
 
 # Parse the output solution into the correct form
 def parseSolution(solution_arr, left_terms, right_terms):
-    print(solution_arr)
     parsed_solution = []
     for actions in solution_arr:
         actions = str(actions)
@@ -312,8 +309,52 @@ CURRENT_SKILLS = ['S8', 'S9']
 EQUATION = '3x-2=6'
 SAMPLE_MISSING_SKILLS = ['S4', 'S5']
 
+# TODO find the total of combining the constants and variables 
+def calcCombineConsts(lht, rht):
+    for lt in lht:
+
+    for rt in rht:
+
+def calcCombineVars(lht, rht):
+    for lt in lht:
+
+    for rt in rht:
 
 def predictSuccess(current_skills, equation):
+    curr_skills_KB = FolKB()
+    required_skills = {}
+    # Create KnowledgeBase for current skills that exist
+    for skill in current_skills:
+        curr_skills_KB.tell(expr(skill))
+
+    steps_for_solving = solveEquation(equation)
+    lht = getLeftTerms(equation)
+    rht = getRightTerms(equation)
+    divisor = calcDivisor(lht, rht)
+    consts_combine = calcCombineConsts(lht, rht)
+    var_combine = calcCombineVars(lht, rht)
+
+    for step in steps_for_solving:
+        if 'addVar' in step:
+            if step[6] == '-':
+                required_skills.add('S2')
+            else:
+                required_skills.add('S1')
+        elif 'addConst' in step:
+            if step[9] == '-':
+                required_skills.add('S4')
+            else:
+                required_skills.add('S3')
+        elif 'divide' in step:
+            if divisor > 0:
+                required_skills.add('S5')
+            else:
+                required_skills.add('S6')
+        elif 'combineRightConst' | 'combineRightConstTwo' in step:
+            required_skills.add()
+
+    #TODO - Create other KB for what they need and Retract need from have if its there and then return
+
     missing_skills = SAMPLE_MISSING_SKILLS
     return missing_skills
 
@@ -347,7 +388,10 @@ def stepThroughProblem(equation, action, current_skills):
 if __name__ == '__main__':
     # Testing Part A
     #print(giveFeedback("CorrectAnswer & IncorrectStreak"))
+
     # Testing Part B
-    print(SAMPLE_EQUATION)
-    print(solveEquation(SAMPLE_EQUATION))
+    #print(SAMPLE_EQUATION)
+    #print(solveEquation(SAMPLE_EQUATION))
+
     # Testing for Part C
+    predictSuccess(CURRENT_SKILLS, EQUATION)
