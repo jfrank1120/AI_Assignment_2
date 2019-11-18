@@ -31,7 +31,7 @@ M6 = 'Incorrect. The following is the correct answer to the problem.'
 M7 = 'Correct.'
 M8 = 'Incorrect.'
 
-
+# Returns the feedback message based on the message that is sent
 def giveFeedback(student_state):
     statement_list = [
         "CorrectAnswer ==> (Message1 | Message2 | Message3 | Message7)",
@@ -68,7 +68,6 @@ def giveFeedback(student_state):
             knowledge_base.tell(neg_p_expr)
             print('Adding: ~' + p)
     return feedback_msg
-
 
 """ A2 Part B
  
@@ -309,19 +308,19 @@ CURRENT_SKILLS = ['S8', 'S9']
 EQUATION = '3x-2=6'
 SAMPLE_MISSING_SKILLS = ['S4', 'S5']
 
-# TODO find the total of combining the constants and variables 
-def calcCombineConsts(lht, rht):
-    for lt in lht:
 
-    for rt in rht:
+def calcCombineVars(terms):
+    total = 0
+    for t in terms:
+        if 'x' in t:
+            t = t.replace('x', '')
+            total += int(t)
 
-def calcCombineVars(lht, rht):
-    for lt in lht:
-
-    for rt in rht:
+    return total
 
 def predictSuccess(current_skills, equation):
     curr_skills_KB = FolKB()
+    required_skills_KB = FolKB()
     required_skills = {}
     # Create KnowledgeBase for current skills that exist
     for skill in current_skills:
@@ -331,8 +330,8 @@ def predictSuccess(current_skills, equation):
     lht = getLeftTerms(equation)
     rht = getRightTerms(equation)
     divisor = calcDivisor(lht, rht)
-    consts_combine = calcCombineConsts(lht, rht)
-    var_combine = calcCombineVars(lht, rht)
+    rht_var_combine = calcCombineVars(rht)
+    lht_var_combine = calcCombineVars(lht)
 
     for step in steps_for_solving:
         if 'addVar' in step:
@@ -351,11 +350,19 @@ def predictSuccess(current_skills, equation):
             else:
                 required_skills.add('S6')
         elif 'combineRightConst' | 'combineRightConstTwo' in step:
-            required_skills.add()
+            required_skills.add('S9')
+        elif 'combineLeftVar':
+            if (rht_var_combine > 0) | (lht_var_combine > 0):
+                required_skills.add('S7')
+            else:
+                required_skills.add('S8')
 
-    #TODO - Create other KB for what they need and Retract need from have if its there and then return
-
-    missing_skills = SAMPLE_MISSING_SKILLS
+    for sk in required_skills:
+        required_skills_KB.tell(expr(sk))
+    for curr_sk in curr_skills_KB.clauses:
+        required_skills_KB.retract(curr_sk)
+    
+    missing_skills = required_skills_KB.clauses
     return missing_skills
 
 
