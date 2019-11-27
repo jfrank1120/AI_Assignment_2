@@ -553,17 +553,17 @@ class ForwardPlan(search.Problem):
         self.expanded_actions = self.planning_problem.expand_actions()
 
     def actions(self, state):
-        print('State:  ' + str(state))
+        #print('State:  ' + str(state))
         #print("Actions Exp: " + str(self.expanded_actions))
         return [action for action in self.expanded_actions if all(pre in conjuncts(state) for pre in action.precond)]
 
     def result(self, state, action):
-        print("State: " + str(state))
-        print("Action: " + str(action))
+        #print("State: " + str(state))
+        #print("Action: " + str(action))
         return associate('&', action(conjuncts(state), action.args).clauses)
 
     def goal_test(self, state):
-        print('Comparing = ' + str(state))
+        #print('Comparing = ' + str(state))
         return all(goal in conjuncts(state) for goal in self.planning_problem.goals)
 
     def h(self, state):

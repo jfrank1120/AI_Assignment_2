@@ -119,10 +119,6 @@ def getRightTerms(equation):
 
 # Combine both sides of terms into initial state string
 def getInitialString(left_terms, right_terms):
-    #left_terms = list(filter(None, left_terms))
-    #right_terms = list(filter(None, right_terms))
-
-    # Begin Planning Problem
     # Create initial string for Planning Problem
     initial_str = ''
     for term in left_terms:
@@ -213,6 +209,7 @@ SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
 # Solve the equation and return the steps
 def solveEquation(equation):
+    # Begin Planning Problem
     # Get the string representing the initial state
     left_terms = getLeftTerms(equation)
     right_terms = getRightTerms(equation)
@@ -308,7 +305,7 @@ CURRENT_SKILLS = ['S8', 'S9']
 EQUATION = '3x-2=6'
 SAMPLE_MISSING_SKILLS = ['S4', 'S5']
 
-
+# Calculate the ending coefficent when combing vars on a side
 def calcCombineVars(terms):
     total = 0
     for t in terms:
@@ -321,7 +318,7 @@ def calcCombineVars(terms):
 def predictSuccess(current_skills, equation):
     curr_skills_KB = FolKB()
     required_skills_KB = FolKB()
-    required_skills = {}
+    required_skills = set()
     # Create KnowledgeBase for current skills that exist
     for skill in current_skills:
         curr_skills_KB.tell(expr(skill))
@@ -349,7 +346,7 @@ def predictSuccess(current_skills, equation):
                 required_skills.add('S5')
             else:
                 required_skills.add('S6')
-        elif 'combineRightConst' | 'combineRightConstTwo' in step:
+        elif ('combineRightConst' or 'combineRightConstTwo') in step:
             required_skills.add('S9')
         elif 'combineLeftVar':
             if (rht_var_combine > 0) | (lht_var_combine > 0):
@@ -360,8 +357,9 @@ def predictSuccess(current_skills, equation):
     for sk in required_skills:
         required_skills_KB.tell(expr(sk))
     for curr_sk in curr_skills_KB.clauses:
-        required_skills_KB.retract(curr_sk)
-    
+        if curr_sk in required_skills_KB.clauses:
+            required_skills_KB.retract(curr_sk)
+
     missing_skills = required_skills_KB.clauses
     return missing_skills
 
@@ -384,21 +382,88 @@ def predictSuccess(current_skills, equation):
 """
 ACTION = 'add -2'
 UPDATED_SKILLS = ['S8', 'S9', 'S4']
+# Global variables for part D
+CORRECT_COUNT = 0
+INCORRECT_COUNT = 0
+STEP = 0
 
 
 def stepThroughProblem(equation, action, current_skills):
-    feedback_message = M1
-    updated_skills = UPDATED_SKILLS
+    global CORRECT_COUNT
+    global INCORRECT_COUNT
+    global STEP
+
+    feedback_message = ""
+    solution = solveEquation(equation)
+    missing_skills = predictSuccess(current_skills, equation)
+
+    lht = getLeftTerms(equation)
+    rht = getRightTerms(equation)
+    divisor = calcDivisor(lht, rht)
+    rht_var_combine = calcCombineVars(rht)
+    lht_var_combine = calcCombineVars(lht)
+
+    if solution[STEP] == action:
+        if INCORRECT_COUNT > 1:
+            feedback_message = giveFeedback("Correct & IncorrectStreak")
+        elif CORRECT_COUNT > 1:
+            feedback_message = giveFeedback("Correct & CorrectStreak")
+        else:
+            feedback_message = giveFeedback("Correct")
+        if 'addVar' in action:
+            if action[6] == '-':
+                current_skills.add('S2')
+                missing_skills.remove('S2')
+            else:
+                current_skills.add('S1')
+                missing_skills.remove('S1')
+        elif 'addConst' in action:
+            if action[9] == '-':
+                current_skills.add('S4')
+                missing_skills.remove('S4')
+            else:
+                current_skills.add('S3')
+                missing_skills.remove('S3')
+        elif 'divide' in action:
+            if divisor > 0:
+                current_skills.add('S5')
+                missing_skills.remove('S5')
+            else:
+                current_skills.add('S6')
+                missing_skills.remove('S6')
+        elif ('combineRightConst' or 'combineRightConstTwo') in action:
+            current_skills.add('S9')
+            missing_skills.remove('S9')
+        elif 'combineLeftVar':
+            if (rht_var_combine > 0) | (lht_var_combine > 0):
+                current_skills.add('S7')
+                missing_skills.remove('S7')
+            else:
+                current_skills.add('S8')
+                missing_skills.remove('S8')
+    else:
+        # The user got the action incorrect
+        if INCORRECT_COUNT > 1:
+            feedback_message = giveFeedback("Incorrect & IncorrectStreak")
+        elif CORRECT_COUNT > 1:
+            feedback_message = giveFeedback("Incorrect & CorrectStreak")
+        else:
+            feedback_message = giveFeedback("Incorrect")
+    updated_skills = current_skills
+    STEP = STEP + 1
     return [feedback_message, updated_skills]
 
 
 if __name__ == '__main__':
+    print('Welcome to Student Learning!')
     # Testing Part A
-    #print(giveFeedback("CorrectAnswer & IncorrectStreak"))
+    #print(giveFeedback("~CorrectAnswer"))
 
     # Testing Part B
     #print(SAMPLE_EQUATION)
     #print(solveEquation(SAMPLE_EQUATION))
 
     # Testing for Part C
-    predictSuccess(CURRENT_SKILLS, EQUATION)
+    # predictSuccess(CURRENT_SKILLS, EQUATION)
+
+    #Testing for Part D
